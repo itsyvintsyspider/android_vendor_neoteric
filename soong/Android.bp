@@ -304,6 +304,17 @@ cc_library_headers {
     defaults: ["generated_kernel_header_defaults"],
 }
 
+// Stub: halimpl/snxxx needs these in header_libs but the code using them is disabled for our board, and neither exists in any public manifest.
+cc_library_headers {
+    name: "peripheralstate_headers",
+    vendor_available: true,
+}
+
+cc_library_headers {
+    name: "mink_headers",
+    vendor_available: true,
+}
+
 soong_config_module_type {
     name: "aapt_version_code",
     module_type: "java_defaults",
