@@ -240,9 +240,13 @@ neoteric_generator {
          "vendor/neoteric/tools/clean_headers.sh $(KERNEL_BUILD_OUT_PREFIX)$(genDir))",
 
     // Directories that can be imported by a cc_* module generated_headers property
+    // "usr/include" (bare, full generic headers_install dump) deliberately
+    // excluded: collides with bionic (e.g. linux/sched/types.h redefines
+    // struct sched_param already in bionic/libc/include/sched.h). Confirmed
+    // nothing needs it -- every file that's actually needed from here lives
+    // under one of the audio-scoped subdirs below.
     export_include_dirs: [
         "usr/audio/include/uapi",
-        "usr/include",
         "usr/include/misc",
         "usr/include/audio",
         "usr/include/audio/include/uapi",
@@ -267,10 +271,11 @@ neoteric_generator {
          "(cd $(KERNEL_BUILD_OUT_PREFIX).; " +
          "mkdir -p $(genDir) && gzip -d < $(TARGET_PREBUILT_KERNEL_HEADERS) | tar -x -C $(genDir) && vendor/neoteric/tools/clean_headers.sh $(KERNEL_BUILD_OUT_PREFIX)$(genDir))",
 
-    // Directories that can be imported by a cc_* module generated_headers property
+    // Directories that can be imported by a cc_* module generated_headers property.
+    // "usr/include" (bare) deliberately excluded -- see the same note on
+    // generated_kernel_includes above, same bionic collision risk.
     export_include_dirs: [
         "usr/audio/include/uapi",
-        "usr/include",
         "usr/include/misc",
         "usr/include/audio",
         "usr/include/audio/include/uapi",
