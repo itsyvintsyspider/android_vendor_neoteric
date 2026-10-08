@@ -147,6 +147,13 @@ KERNEL_MAKE_FLAGS += -j$(shell getconf _NPROCESSORS_ONLN)
 TOOLS_PATH_OVERRIDE := \
     HIP_PATH=none PERL5LIB=$(BUILD_TOP)/prebuilts/tools-lineage/common/perl-base
 
+# A board may override this if its TARGET_KERNEL_CLANG_PATH toolchain
+# can't build kernel host tools (e.g. SIGSEGV in fixdep) against the
+# host sysroot either branch below uses -- defaults to the same
+# toolchain, so boards that don't set it see no change. Set once here
+# so it applies regardless of which KERNEL_NO_GCC branch is taken.
+TARGET_KERNEL_HOST_CLANG_PATH ?= $(TARGET_KERNEL_CLANG_PATH)
+
 ifneq ($(KERNEL_NO_GCC), true)
     GCC_PREBUILTS := $(BUILD_TOP)/prebuilts/gcc/$(HOST_PREBUILT_TAG)
     # arm64 toolchain
@@ -229,11 +236,11 @@ ifneq ($(KERNEL_NO_GCC), true)
         TOOLS_PATH_OVERRIDE += PATH=$(BUILD_TOP)/prebuilts/tools-lineage/$(HOST_PREBUILT_TAG)/bin:$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin:$$PATH
     endif
 
-    # Set the full path to the clang command and LLVM binutils
-    KERNEL_MAKE_FLAGS += HOSTAR=$(TARGET_KERNEL_CLANG_PATH)/bin/llvm-ar
-    KERNEL_MAKE_FLAGS += HOSTCC=$(TARGET_KERNEL_CLANG_PATH)/bin/clang
-    KERNEL_MAKE_FLAGS += HOSTLD=$(TARGET_KERNEL_CLANG_PATH)/bin/ld.lld
-    KERNEL_MAKE_FLAGS += HOSTCXX=$(TARGET_KERNEL_CLANG_PATH)/bin/clang++
+    # Set the full path to the clang command and LLVM binutils.
+    KERNEL_MAKE_FLAGS += HOSTAR=$(TARGET_KERNEL_HOST_CLANG_PATH)/bin/llvm-ar
+    KERNEL_MAKE_FLAGS += HOSTCC=$(TARGET_KERNEL_HOST_CLANG_PATH)/bin/clang
+    KERNEL_MAKE_FLAGS += HOSTLD=$(TARGET_KERNEL_HOST_CLANG_PATH)/bin/ld.lld
+    KERNEL_MAKE_FLAGS += HOSTCXX=$(TARGET_KERNEL_HOST_CLANG_PATH)/bin/clang++
     ifneq ($(TARGET_KERNEL_CLANG_COMPILE), false)
         ifneq ($(TARGET_KERNEL_LLVM_BINUTILS), false)
             KERNEL_MAKE_FLAGS += LD=$(TARGET_KERNEL_CLANG_PATH)/bin/ld.lld
@@ -249,6 +256,15 @@ else
 
     KERNEL_MAKE_FLAGS += HOSTCFLAGS="$(KERNEL_HOST_C_LD_FLAGS_SYSROOT) -I$(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/include"
     KERNEL_MAKE_FLAGS += HOSTLDFLAGS="$(KERNEL_HOST_C_LD_FLAGS_SYSROOT) -Wl,-rpath,$(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/lib64 -L $(BUILD_TOP)/prebuilts/kernel-build-tools/linux-x86/lib64 -fuse-ld=lld --rtlib=compiler-rt"
+    # See TARGET_KERNEL_HOST_CLANG_PATH comment above this ifneq block --
+    # under LLVM=1 with no explicit HOSTCC, Kbuild derives it from
+    # whatever clang resolves to via PATH, which is TARGET_KERNEL_CLANG_PATH
+    # (appended to PATH a few lines below). Pin it explicitly instead so a
+    # board can redirect host-tool compilation independently.
+    KERNEL_MAKE_FLAGS += HOSTAR=$(TARGET_KERNEL_HOST_CLANG_PATH)/bin/llvm-ar
+    KERNEL_MAKE_FLAGS += HOSTCC=$(TARGET_KERNEL_HOST_CLANG_PATH)/bin/clang
+    KERNEL_MAKE_FLAGS += HOSTLD=$(TARGET_KERNEL_HOST_CLANG_PATH)/bin/ld.lld
+    KERNEL_MAKE_FLAGS += HOSTCXX=$(TARGET_KERNEL_HOST_CLANG_PATH)/bin/clang++
 
     TOOLS_PATH_OVERRIDE += PATH=$(BUILD_TOP)/prebuilts/tools-lineage/$(HOST_PREBUILT_TAG)/bin:$(BUILD_TOP)/prebuilts/build-tools/$(HOST_PREBUILT_TAG)/bin:$(TARGET_KERNEL_CLANG_PATH)/bin:$(BUILD_TOP)/prebuilts/rust/$(HOST_PREBUILT_TAG)/$(TARGET_KERNEL_RUST_VERSION)/bin:$(BUILD_TOP)/prebuilts/clang-tools/$(HOST_PREBUILT_TAG)/bin:$$PATH
 endif
