@@ -337,7 +337,7 @@ define make-kernel-config
 			-d LTO_CLANG_THIN \
 			-d LTO_CLANG_FULL \
 			-d THINLTO; \
-			$(call make-kernel-target,olddefconfig); \
+			$(call internal-make-kernel-target,$(1),olddefconfig); \
 		elif [ "$(KERNEL_LTO)" = "thin" ]; then \
 			$(KERNEL_SRC)/scripts/config --file $(1)/.config \
 			-e LTO_CLANG \
@@ -345,7 +345,7 @@ define make-kernel-config
 			-e LTO_CLANG_THIN \
 			-d LTO_CLANG_FULL \
 			-e THINLTO; \
-			$(call make-kernel-target,olddefconfig); \
+			$(call internal-make-kernel-target,$(1),olddefconfig); \
 		elif [ "$(KERNEL_LTO)" = "full" ]; then \
 			$(KERNEL_SRC)/scripts/config --file $(1)/.config \
 			-e LTO_CLANG \
@@ -353,12 +353,12 @@ define make-kernel-config
 			-d LTO_CLANG_THIN \
 			-e LTO_CLANG_FULL \
 			-d THINLTO; \
-			$(call make-kernel-target,olddefconfig); \
+			$(call internal-make-kernel-target,$(1),olddefconfig); \
 		fi
 	$(hide) if [ ! -z "$(KERNEL_CONFIG_OVERRIDE)" ]; then \
 			echo "Overriding kernel config with '$(KERNEL_CONFIG_OVERRIDE)'"; \
 			echo $(KERNEL_CONFIG_OVERRIDE) >> $(1)/.config; \
-			$(call make-kernel-target,oldconfig); \
+			$(call internal-make-kernel-target,$(1),oldconfig); \
 		fi
 endef
 
